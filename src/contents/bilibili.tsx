@@ -39,7 +39,9 @@ const PlasmoInline = () => {
         const elDuration = elVideoLi.querySelector('.duration');
         if (!elDuration) return;
         const duration = elDuration?.innerHTML.split(':');
-        const durationSecond = parseInt(duration[0], 10) * 60 + parseInt(duration[1], 10);
+        const durationSecond = duration.reduce((pre, current, index) => {
+          return pre + parseInt(current, 10) * Math.pow(60, duration.length - index - 1);
+        }, 0);
         durationList.push(durationSecond);
       }
       const sumDuration = durationList.reduce((a, b) => a + b, 0);
@@ -60,6 +62,12 @@ const PlasmoInline = () => {
     };
   }, []);
 
+  const handleIncreasePalyRate = () => {
+    const elVideo = document.querySelector('video');
+    if (!elVideo) return;
+    elVideo.playbackRate += 1;
+  };
+
   if (sum === undefined) {
     return null;
   }
@@ -68,6 +76,7 @@ const PlasmoInline = () => {
       <span className="time">{secondToTime(current)} / </span>
       <span className="time">{secondToTime(sum)} </span>
       <span className="percent">{((current / sum) * 100).toFixed(2)}% </span>
+      <button onClick={handleIncreasePalyRate}>+1 speed</button>
     </div>
   );
 };
