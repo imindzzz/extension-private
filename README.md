@@ -30,6 +30,27 @@ npm run test         # Vitest 单测
 
 首次开发需要先 `npm install`，`postinstall` 会自动执行 `wxt prepare` 生成 `.wxt/` 类型。
 
+## 调试与本地安装
+
+`npm run dev` 和 `npm run build` **输出到同一个目录** `.output/chrome-mv3-dev`（配置见 `wxt.config.ts` 的 `outDirTemplate`），Chrome 里只需要加载一次：
+
+1. 打开 `chrome://extensions`，右上角启用「开发者模式」
+2. 「加载已解压的扩展程序」→ 选 `.output/chrome-mv3-dev`
+
+目录里是哪个版本，完全取决于你最后运行的是哪条命令：
+
+| 最后运行        | 目录内容 | 体积   | 特征                                                                                                                           |
+| --------------- | -------- | ------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| `npm run dev`   | 开发版   | 3.6 MB | 含 `background.js`；`content_scripts` 改为运行时注册；额外申请 `<all_urls>` 与 `http://localhost/*`；CSP 放开 `localhost:3000` |
+| `npm run build` | 生产版   | 496 kB | 无 `background`；`content_scripts` 由 manifest 静态声明；权限仅限 3 个站点                                                     |
+
+### 四个必须记住的坑
+
+- **开发版不能当日常版本用**。它把内容脚本改成由 background 在运行时注册，依赖 `localhost:3000` 的 dev server 存活，并且权限范围明显更大。**用完 dev 想日常使用，务必再跑一次 `npm run build`。**
+- **不要同时运行 dev 和 build**。两者写同一目录，会互相覆盖，dev server 的 watcher 还会把 build 产物再改回开发版。
+- **`wxt clean` 会删掉 `.output`**，Chrome 里已加载的扩展会变成「已损坏」。重新 `npm run build` 后点扩展的刷新按钮即可。
+- **合并后无法同时保留两份产物**。需要并排对比时，把 `outDirTemplate` 改回带 `{{modeSuffix}}` 即可恢复 `chrome-mv3` / `chrome-mv3-dev` 双目录。
+
 ## 目录结构
 
 ```
