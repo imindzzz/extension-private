@@ -1,0 +1,40 @@
+.progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 16px 8px;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    'Microsoft YaHei',
+    sans-serif;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text1, #18191c);
+}
+
+.progress__time {
+  font-variant-numeric: tabular-nums;
+}
+
+.progress__percent {
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+
+.progress__action {
+  margin-left: auto;
+  padding: 2px 8px;
+  border: 1px solid var(--line_regular, #e3e5e7);
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.progress__action:hover {
+  border-color: var(--brand_blue, #00aeec);
+  color: var(--brand_blue, #00aeec);
+}

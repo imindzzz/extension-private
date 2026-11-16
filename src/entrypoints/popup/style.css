@@ -1,0 +1,41 @@
+:root {
+  color-scheme: light dark;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    'Microsoft YaHei',
+    sans-serif;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+.popup {
+  padding: 14px 16px;
+}
+
+.popup h1 {
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+
+.popup ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.popup li {
+  display: grid;
+  gap: 2px;
+  font-size: 12px;
+}
+
+.popup li span {
+  opacity: 0.65;
+}
