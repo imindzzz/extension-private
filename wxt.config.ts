@@ -15,5 +15,11 @@ export default defineConfig({
   manifest: {
     name: 'Extension Private',
     description: '自用插件合集',
+    permissions: ['storage', 'contextMenus', 'activeTab'],
+    // 管理界面作为独立标签页打开，而不是塞在扩展弹窗里
+    options_ui: {
+      page: 'manager.html',
+      open_in_tab: true,
+    },
   },
 });

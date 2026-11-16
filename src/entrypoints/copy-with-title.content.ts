@@ -1,9 +1,11 @@
 import { defineContentScript } from 'wxt/utils/define-content-script';
 
+import { formatCopyText } from '@/lib/copy-format';
+import { settingsItem } from '@/lib/storage';
 import { copyToClipboard } from '@/utils/copy-to-clipboard';
 
 /**
- * Alt + C 复制「页面标题 + 链接」，方便贴到聊天窗口时保留出处。
+ * Alt + C 复制当前页面，格式由设置决定（标题+链接 / Markdown / 仅链接）。
  */
 export default defineContentScript({
   matches: ['<all_urls>'],
@@ -15,7 +17,11 @@ export default defineContentScript({
       // 让出 Ctrl / ⌘ / Shift 组合键，避免和站点快捷键打架
       if (event.ctrlKey || event.metaKey || event.shiftKey) return;
 
-      void copyToClipboard(`${document.title}\n${location.href}`);
+      void (async () => {
+        // 每次按键都读一次设置，保证管理界面里改完立刻生效
+        const { copyFormat } = await settingsItem.getValue();
+        await copyToClipboard(formatCopyText(copyFormat, document.title, location.href));
+      })();
     });
   },
 });

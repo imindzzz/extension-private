@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { formatSeconds, parseDurationToSeconds, sumDurations, sumWatchedBefore } from '@/utils/duration';
+import { settingsItem } from '@/lib/storage';
 
 interface ProgressState {
   watched: number;
@@ -57,10 +58,16 @@ function Progress() {
   }, []);
 
   const increaseRate = useCallback(() => {
-    const video = document.querySelector('video');
-    if (!video) return;
-    video.playbackRate = Math.min(video.playbackRate + 1, MAX_PLAYBACK_RATE);
-    setState(readProgress());
+    void (async () => {
+      const video = document.querySelector('video');
+      if (!video) return;
+
+      // 步长来自设置，改完无需刷新页面
+      const { playbackStep } = await settingsItem.getValue();
+      const next = Number((video.playbackRate + playbackStep).toFixed(2));
+      video.playbackRate = Math.min(next, MAX_PLAYBACK_RATE);
+      setState(readProgress());
+    })();
   }, []);
 
   if (!state) return null;

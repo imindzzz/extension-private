@@ -1,0 +1,80 @@
+.blocked {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #f5f6f7;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    'Microsoft YaHei',
+    sans-serif;
+  color: #1f2328;
+}
+
+.blocked__card {
+  width: min(440px, 100%);
+  padding: 28px 32px 24px;
+  border: 1px solid #e3e5e7;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 8%);
+}
+
+.blocked__badge {
+  display: inline-block;
+  margin: 0 0 12px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #fdecec;
+  color: #d93026;
+  font-size: 12px;
+}
+
+.blocked__host {
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.blocked__desc {
+  margin: 0 0 20px;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.blocked__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.blocked__btn {
+  padding: 6px 14px;
+  border: 1px solid #e3e5e7;
+  border-radius: 6px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.blocked__btn:hover {
+  border-color: #c9ccd0;
+}
+
+.blocked__btn--primary {
+  border-color: #1f2328;
+  background: #1f2328;
+  color: #fff;
+}
+
+.blocked__btn--primary:hover {
+  border-color: #000;
+  background: #000;
+}
