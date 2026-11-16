@@ -24,6 +24,11 @@ export interface Settings {
   blacklistEnabled: boolean;
   /** 命中后是否暂停页面上的音视频 */
   pauseMediaOnBlock: boolean;
+  /**
+   * 命中后是否在网络层阻断子资源（脚本/图片/样式/媒体/接口）。
+   * 主文档不拦 —— 拦掉它浏览器只会显示错误页，自制拦截页就看不到了。
+   */
+  blockSubresources: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -31,6 +36,7 @@ export const DEFAULT_SETTINGS: Settings = {
   playbackStep: 1,
   blacklistEnabled: true,
   pauseMediaOnBlock: true,
+  blockSubresources: true,
 };
 
 export const COPY_FORMAT_LABELS: Record<CopyFormat, string> = {

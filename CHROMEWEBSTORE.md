@@ -48,16 +48,18 @@ Chinese (Simplified)
 
 ## Permissions Justification
 
-| Permission（manifest 字段）                                | Type           | Justification                                                              |
-| ---------------------------------------------------------- | -------------- | -------------------------------------------------------------------------- |
-| `storage`                                                  | permissions    | 在本机保存黑名单规则与插件设置，不涉及任何远程同步                         |
-| `contextMenus`                                             | permissions    | 提供「把当前域名加入 / 移出黑名单」的右键菜单项                            |
-| `activeTab`                                                | permissions    | 弹窗需要读取当前标签页的域名以显示拦截状态，仅在用户点击扩展图标时临时授予 |
-| `content_scripts.matches: https://www.bilibili.com/video*` | content script | 在 B 站视频页读取分 P 列表的时长文本并展示观看进度，仅在视频页注入         |
-| `content_scripts.matches: https://leetcode.cn/problems/*`  | content script | 在 LeetCode 题目页拦截粘贴事件，裁剪带标记的代码块，仅在题目页注入         |
-| `content_scripts.matches: <all_urls>`（copy-with-title）   | content script | Alt + C 需在用户任意当前页面生效，无法预先枚举域名                         |
-| `content_scripts.matches: <all_urls>`（blacklist）         | content script | 黑名单需在用户配置的任意站点尽早生效；命中前不产生任何可见或持久化副作用   |
-| `web_accessible_resources: content-scripts/bilibili.css`   | resource       | Shadow Root UI 的样式表需要在页面上下文中加载，仅对 `bilibili.com` 暴露    |
+| Permission（manifest 字段）                                | Type            | Justification                                                              |
+| ---------------------------------------------------------- | --------------- | -------------------------------------------------------------------------- |
+| `storage`                                                  | permissions     | 在本机保存黑名单规则与插件设置，不涉及任何远程同步                         |
+| `contextMenus`                                             | permissions     | 提供「把当前域名加入 / 移出黑名单」的右键菜单项                            |
+| `activeTab`                                                | permissions     | 弹窗需要读取当前标签页的域名以显示拦截状态，仅在用户点击扩展图标时临时授予 |
+| `declarativeNetRequest`                                    | permissions     | 在黑名单站点的子资源请求发出前将其阻断，不修改请求内容、不注入任何数据     |
+| `host_permissions: <all_urls>`                             | host permission | DNR 必须在请求发起前完成匹配，而黑名单由用户随时增删，域名无法预先枚举     |
+| `content_scripts.matches: https://www.bilibili.com/video*` | content script  | 在 B 站视频页读取分 P 列表的时长文本并展示观看进度，仅在视频页注入         |
+| `content_scripts.matches: https://leetcode.cn/problems/*`  | content script  | 在 LeetCode 题目页拦截粘贴事件，裁剪带标记的代码块，仅在题目页注入         |
+| `content_scripts.matches: <all_urls>`（copy-with-title）   | content script  | Alt + C 需在用户任意当前页面生效，无法预先枚举域名                         |
+| `content_scripts.matches: <all_urls>`（blacklist）         | content script  | 黑名单需在用户配置的任意站点尽早生效；命中前不产生任何可见或持久化副作用   |
+| `web_accessible_resources: content-scripts/bilibili.css`   | resource        | Shadow Root UI 的样式表需要在页面上下文中加载，仅对 `bilibili.com` 暴露    |
 
 拦截页的样式表通过 `?inline` 打包进 JS，因此没有为全站暴露任何 `web_accessible_resources` 文件。
 

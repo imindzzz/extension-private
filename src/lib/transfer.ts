@@ -112,6 +112,9 @@ function sanitizeSettings(input: unknown): Partial<Settings> {
   if (typeof raw.pauseMediaOnBlock === 'boolean') {
     result.pauseMediaOnBlock = raw.pauseMediaOnBlock;
   }
+  if (typeof raw.blockSubresources === 'boolean') {
+    result.blockSubresources = raw.blockSubresources;
+  }
 
   return result;
 }

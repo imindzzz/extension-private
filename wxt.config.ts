@@ -15,7 +15,9 @@ export default defineConfig({
   manifest: {
     name: 'Extension Private',
     description: '自用插件合集',
-    permissions: ['storage', 'contextMenus', 'activeTab'],
+    permissions: ['storage', 'contextMenus', 'activeTab', 'declarativeNetRequest'],
+    // 网络层拦截需要在发起前匹配请求，必须显式声明可访问的主机
+    host_permissions: ['<all_urls>'],
     // 管理界面作为独立标签页打开，而不是塞在扩展弹窗里
     options_ui: {
       page: 'manager.html',

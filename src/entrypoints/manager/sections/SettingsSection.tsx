@@ -77,6 +77,21 @@ function SettingsSection() {
           拦截时暂停页面上的音视频
         </label>
       </div>
+
+      <div className="field">
+        <label className="check">
+          <input
+            type="checkbox"
+            checked={settings.blockSubresources}
+            onChange={(event) => patch({ blockSubresources: event.target.checked })}
+          />
+          命中时拦截网络请求（推荐）
+        </label>
+        <p className="muted">
+          在请求发出前就阻断脚本、图片、样式、媒体与接口，页面内容不会被下载。主文档不拦 ——
+          拦掉它浏览器只会显示错误页，自制拦截页和「本次仍要访问」就没有了。
+        </p>
+      </div>
     </section>
   );
 }

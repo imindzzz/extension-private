@@ -15,6 +15,13 @@ const GUARD_TIMEOUT_MS = 800;
 /** 命中后观察媒体元素的时间，有些站点的播放器是后置插入的 */
 const MEDIA_WATCH_MS = 5000;
 
+/** 问后台「这个站点是否已本次放行」，后台没响应就按未放行处理 */
+const ALLOW_QUERY_TIMEOUT_MS = 300;
+
+const MSG_IS_ALLOWED = 'net:is-allowed';
+const MSG_ALLOW = 'net:allow';
+const MSG_UNBLOCK = 'net:unblock';
+
 const STYLE_HIDE = 'html { visibility: hidden !important; } html, body { overflow: hidden !important; }';
 const STYLE_LOCK = 'html, body { overflow: hidden !important; }';
 
@@ -34,6 +41,43 @@ function setGuard(style: HTMLStyleElement, mode: 'hide' | 'lock' | 'off'): void 
     return;
   }
   style.textContent = mode === 'hide' ? STYLE_HIDE : STYLE_LOCK;
+  // 看门狗可能已经把它摘掉了，这里要能重新挂回去
+  if (!style.isConnected) {
+    (document.head ?? document.documentElement).append(style);
+  }
+}
+
+/**
+ * 把宿主元素送进 top layer。
+ *
+ * 只设 `z-index: 2147483647` 是不够的：只要页面上任意祖先带 `transform`、`filter`、
+ * `will-change` 或 `contain`，就会新建层叠上下文，`position: fixed` 也会改为相对那个
+ * 祖先定位，宿主给的最大 z-index 只在这个小圈子里比较，照样被盖住。
+ * top layer 由浏览器保证渲染在所有普通内容之上，且不受祖先层叠上下文影响。
+ */
+function promoteToTopLayer(host: HTMLElement): void {
+  host.setAttribute('popover', 'manual');
+
+  const style = host.style;
+  // popover 的 UA 样式带 margin: auto / border / padding / background，逐个顶掉
+  style.setProperty('position', 'fixed', 'important');
+  style.setProperty('inset', '0', 'important');
+  style.setProperty('width', '100%', 'important');
+  style.setProperty('height', '100%', 'important');
+  style.setProperty('margin', '0', 'important');
+  style.setProperty('padding', '0', 'important');
+  style.setProperty('border', '0', 'important');
+  style.setProperty('background', 'transparent', 'important');
+  style.setProperty('overflow', 'hidden', 'important');
+  // 祖先若有 visibility: hidden，子元素显式声明 visible 仍可显示
+  style.setProperty('visibility', 'visible', 'important');
+  style.setProperty('z-index', '2147483647', 'important');
+
+  try {
+    host.showPopover();
+  } catch {
+    // 浏览器不支持 popover 时退回 fixed + 最高 z-index 的降级表现
+  }
 }
 
 function pauseMedia(): void {
@@ -48,6 +92,23 @@ function pauseMedia(): void {
   const observer = new MutationObserver(stop);
   observer.observe(document.documentElement, { childList: true, subtree: true });
   setTimeout(() => observer.disconnect(), MEDIA_WATCH_MS);
+}
+
+async function requestBackground(type: string, payload: Record<string, unknown>): Promise<boolean> {
+  try {
+    const response = await browser.runtime.sendMessage({ type, ...payload });
+    return response === true;
+  } catch {
+    return false;
+  }
+}
+
+async function isAllowedForSession(hostname: string): Promise<boolean> {
+  const query = requestBackground(MSG_IS_ALLOWED, { host: hostname });
+  const timeout = new Promise<boolean>((resolve) => {
+    setTimeout(() => resolve(false), ALLOW_QUERY_TIMEOUT_MS);
+  });
+  return Promise.race([query, timeout]);
 }
 
 export default defineContentScript({
@@ -77,7 +138,6 @@ export default defineContentScript({
       release();
       return;
     }
-    clearTimeout(watchdog);
 
     const hit = findMatchingRule(location.href, rules);
     if (!hit) {
@@ -85,10 +145,11 @@ export default defineContentScript({
       return;
     }
 
-    const removeRule = async (): Promise<void> => {
-      const latest = await blacklistItem.getValue();
-      await blacklistItem.setValue(latest.filter((rule) => rule.id !== hit.id));
-    };
+    // 已经点过「本次仍要访问」，allowAllRequests 规则还生效着，不要再拦一次
+    if (await isAllowedForSession(location.hostname)) {
+      release();
+      return;
+    }
 
     // 用对象持有引用，让 close 能在 UI 创建之前定义
     const mounted: { ui?: Ui } = {};
@@ -106,9 +167,21 @@ export default defineContentScript({
       css: blockedCss,
       onMount: (container) => {
         renderBlockedUi(container, hit, {
-          onAllowOnce: close,
+          onAllowOnce: () => {
+            void (async () => {
+              const allowed = await requestBackground(MSG_ALLOW, { host: location.hostname });
+              // 放行失败就只撤掉遮罩，重载会立刻又被拦，变成死循环
+              if (allowed) location.reload();
+              else close();
+            })();
+          },
           onRemoveRule: () => {
-            void removeRule().finally(close);
+            void (async () => {
+              const removed = await requestBackground(MSG_UNBLOCK, { ruleId: hit.id });
+              // 规则删掉后必须重载：首次加载时子资源已经被拦掉了
+              if (removed) location.reload();
+              else close();
+            })();
           },
           onOpenManager: () => {
             void browser.tabs.create({ url: browser.runtime.getURL('/manager.html') });
@@ -119,6 +192,8 @@ export default defineContentScript({
 
     setGuard(guard, 'lock');
     mounted.ui.mount();
+    promoteToTopLayer(mounted.ui.shadowHost);
+    clearTimeout(watchdog);
 
     if (settings.pauseMediaOnBlock) {
       pauseMedia();
